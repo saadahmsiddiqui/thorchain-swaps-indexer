@@ -6,6 +6,13 @@ export interface Stages {
   inbound_finalised?: InboundFinalised;
   swap_status?: SwapStatus;
   swap_finalised?: SwapFinalised;
+  outbound_signed?: {
+    scheduled_outbound_height: number;
+  };
+  outbound_delay?: {
+    remaining_delay_blocks: number;
+    remaining_delay_seconds: number;
+  };
 }
 
 export interface InboundObserved {
@@ -24,6 +31,11 @@ export interface InboundFinalised {
 
 export interface SwapStatus {
   pending: boolean;
+  streaming?: {
+    quantity: number;
+    count: number;
+    interval: number;
+  };
 }
 
 export interface SwapFinalised {

@@ -49,14 +49,17 @@ export async function archiveSwap(swapHash: string): Promise<ArchiveSwapResult> 
       inbound_finalised_completed: stages.inbound_finalised?.completed ?? null,
       swap_status_pending: stages.swap_status?.pending ?? null,
       swap_finalised_completed: stages.swap_finalised?.completed ?? null,
+      streaming_interval: stages.swap_status?.streaming?.interval ?? 0,
+      streaming_quantity: stages.swap_status?.streaming?.quantity ?? 0,
+      streaming_count: stages.swap_status?.streaming?.count ?? 0,
+      outbound_signed_scheduled_outbound_height:
+        stages.outbound_signed?.scheduled_outbound_height ?? null,
+      outbound_delay_remaining_delay_blocks: stages.outbound_delay?.remaining_delay_blocks ?? null,
+      outbound_delay_remaining_delay_seconds:
+        stages.outbound_delay?.remaining_delay_seconds ?? null,
     },
     db,
   );
-
-  console.log('archive-swap: swap_stats?.pending: ' + stages.swap_status?.pending);
-  console.log('archive-swap: inbound_observed.final_count: ' + stages.inbound_observed.final_count);
-  console.log('archive-swap: inbound_observed.completed: ' + stages.inbound_observed.completed);
-  console.log('archive-swap: swap_finalised?.completed: ' + stages.swap_finalised?.completed);
 
   const baseId = await storeTransactionBaseInfo(db, {
     tx_id: detail.tx_id,

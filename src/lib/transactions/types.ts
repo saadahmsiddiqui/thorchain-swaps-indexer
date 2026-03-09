@@ -62,7 +62,7 @@ export type TransactionAction = {
   original_memo: string;
   gas_rate: number;
   in_hash: string;
-  clout_spent: string;
+  clout_spent: string | null;
   vault_pub_key: string | null;
   vault_pub_key_eddsa: string | null;
   created_at: number;
@@ -110,4 +110,10 @@ export type TransactionStage = {
   inbound_finalised_completed: boolean | null;
   swap_status_pending: boolean | null;
   swap_finalised_completed: boolean | null;
+  streaming_interval: number | null;
+  streaming_quantity: number | null;
+  streaming_count: number | null;
+  outbound_signed_scheduled_outbound_height: number | null;
+  outbound_delay_remaining_delay_blocks: number | null;
+  outbound_delay_remaining_delay_seconds: number | null;
 };

@@ -46,7 +46,7 @@ export interface Action {
   max_gas: MaxGas[];
   gas_rate: number;
   in_hash: string;
-  clout_spent: string;
+  clout_spent: string | null;
   vault_pub_key?: string;
   vault_pub_key_eddsa?: string;
 }

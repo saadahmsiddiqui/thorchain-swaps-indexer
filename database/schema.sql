@@ -1,4 +1,4 @@
-CREATE TABLE thorchain.transaction_stages (
+CREATE TABLE thorchain.transactions_stages (
     protocol VARCHAR(50),
     hash TEXT,
 
@@ -18,6 +18,13 @@ CREATE TABLE thorchain.transaction_stages (
 
     -- SwapStatus (optional)
     swap_status_pending BOOLEAN,
+
+    streaming_interval INTEGER,
+    streaming_quantity INTEGER,
+    streaming_count INTEGER,
+    outbound_signed_scheduled_outbound_height INTEGER,
+    outbound_delay_remaining_delay_blocks INTEGER,
+    outbound_delay_remaining_delay_seconds INTEGER,
 
     -- SwapFinalised (optional)
     swap_finalised_completed BOOLEAN,
@@ -92,7 +99,7 @@ CREATE TABLE thorchain.actions (
     original_memo VARCHAR NOT NULL,
     gas_rate INTEGER NOT NULL,
     in_hash VARCHAR NOT NULL,
-    clout_spent VARCHAR NOT NULL,
+    clout_spent VARCHAR,
     vault_pub_key VARCHAR,
     vault_pub_key_eddsa VARCHAR,
     created_at TIMESTAMP DEFAULT NOW()
