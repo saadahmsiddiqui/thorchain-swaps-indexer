@@ -2,7 +2,11 @@ import { config } from 'dotenv';
 config();
 
 import winston, { createLogger } from 'winston';
-import { getIndexedHeight, updateIndexedHeight } from './lib/indexer/state-utils';
+import {
+  getIndexedHeight,
+  storeIndexedHeight,
+  updateIndexedHeight,
+} from './lib/indexer/repository';
 import { EndBlockEvent, get as getBlock, Root, Tx } from './api/thorchain/block';
 import { scheduleJob } from 'node-schedule';
 import { isRefundEvent, isSwapEvent } from './lib/end-block-events/utils';
@@ -133,17 +137,30 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
   if (currentHeight === null) return;
   logger.info('catch-up current height: ' + currentHeight);
 
-  const indexedHeight = getIndexedHeight('thorchain');
+  let indexedHeight = await getIndexedHeight({ protocol: 'thorchain' });
+  if (!indexedHeight) {
+    logger.info(`catch-up storing height to start from ` + currentHeight);
+    await storeIndexedHeight({ height: currentHeight, protocol: 'thorchain' });
+  }
+
+  indexedHeight = await getIndexedHeight({ protocol: 'thorchain' });
+
+  if (!indexedHeight) {
+    logger.info(`catch-up height not found ` + currentHeight);
+    return;
+  }
+
   logger.info('catch-up indexed height: ' + indexedHeight);
-  if (indexedHeight >= currentHeight) return;
-  const difference = currentHeight - indexedHeight;
+  const heightNum = Number(indexedHeight.height);
+  if (heightNum >= currentHeight) return;
+  const difference = currentHeight - heightNum;
 
   for (let index = 1; index < difference; index++) {
-    const height = index + indexedHeight;
+    const height = index + heightNum;
     logger.info('catch-up processing height: ' + height);
     const state = await indexHeight(height);
     if (state.halt) return;
-    updateIndexedHeight('thorchain', height);
+    updateIndexedHeight({ protocol: 'thorchain', height: heightNum });
   }
 
   lock.release();

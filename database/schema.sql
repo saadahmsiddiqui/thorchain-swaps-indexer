@@ -184,3 +184,10 @@ CREATE TABLE thorchain.swap_end_block_events (
 );
 
 CREATE INDEX idx_swap_end_block_events_height ON thorchain.swap_end_block_events(height);
+
+CREATE TABLE thorchain.indexed_heights (
+    height BIGINT NOT NULL,
+    protocol VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (height, protocol)
+);
