@@ -24,7 +24,18 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
   console.log(`process-txs num txs: `, txs.length);
 
   for (const transaction of txs) {
-    const memo = transaction.tx.body?.memo ?? null;
+    const hasMemoInBody = transaction.tx.body && transaction.tx.body.memo.length;
+    const hasMemoInFirstMessage =
+      transaction.tx.body &&
+      transaction.tx.body.messages &&
+      transaction.tx.body.messages[0] &&
+      transaction.tx.body.messages[0].memo;
+
+    const memo = hasMemoInBody
+      ? transaction.tx.body!.memo
+      : hasMemoInFirstMessage
+        ? transaction.tx.body!.messages[0].memo
+        : null;
 
     const indexedHash = {
       protocol: 'thorchain',
