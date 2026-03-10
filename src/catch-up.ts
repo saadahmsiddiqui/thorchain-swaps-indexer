@@ -149,19 +149,27 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
 
     if (!indexedHeight) {
         logger.info(`catch-up height not found ` + currentHeight);
+        lock.release();
         return;
     }
 
     logger.info('catch-up indexed height: ' + indexedHeight);
     const heightNum = Number(indexedHeight.height);
-    if (heightNum >= currentHeight) return;
-    const difference = currentHeight - heightNum;
 
+    if (heightNum >= currentHeight) {
+        lock.release();
+        return;
+    }
+
+    const difference = currentHeight - heightNum;
     for (let index = 1; index < difference; index++) {
         const height = index + heightNum;
         logger.info('catch-up processing height: ' + height);
         const state = await indexHeight(height);
-        if (state.halt) return;
+        if (state.halt) {
+            lock.release();
+            return;
+        }
         await updateIndexedHeight({ protocol: 'thorchain', height: height });
     }
 
