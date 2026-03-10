@@ -53,7 +53,7 @@ CREATE TABLE thorchain.txs (
     detail_chain VARCHAR NOT NULL,
     detail_from_address VARCHAR NOT NULL,
     detail_to_address VARCHAR NOT NULL,
-    detail_memo VARCHAR NOT NULL,
+    detail_memo VARCHAR,
 
     -- Tx fields
     status VARCHAR,

@@ -19,7 +19,7 @@ export type InnerTransaction = {
   detail_chain: string;
   detail_from_address: string;
   detail_to_address: string;
-  detail_memo: string;
+  detail_memo: string | null;
   status: string | null;
   external_observed_height: number | null;
   observed_pub_key: string | null;

@@ -29,7 +29,7 @@ export interface TxDetail {
   to_address: string;
   coins: Coin[];
   gas: Array<Coin> | null;
-  memo: string;
+  memo: string | null;
 }
 
 export interface Coin {
