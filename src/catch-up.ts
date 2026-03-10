@@ -29,12 +29,14 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
   logger.info(`process-txs num txs: `, txs.length);
 
   for (const transaction of txs) {
-    const hasMemoInBody = transaction.tx.body && transaction.tx.body.memo.length;
+    const hasMemoInBody =
+      transaction.tx.body && transaction.tx.body.memo && transaction.tx.body.memo.length;
     const hasMemoInFirstMessage =
       transaction.tx.body &&
       transaction.tx.body.messages &&
       transaction.tx.body.messages[0] &&
-      transaction.tx.body.messages[0].memo;
+      transaction.tx.body.messages[0].memo &&
+      transaction.tx.body.messages[0].memo.length;
 
     const memo = hasMemoInBody
       ? transaction.tx.body!.memo
