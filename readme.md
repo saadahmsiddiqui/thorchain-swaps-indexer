@@ -1,3 +1,15 @@
+## Required ENV vars
+
+```sh
+DB_HOST_READ=
+DB_HOST_READ_WRITE=
+DB_PASSWORD=
+DB_USER=
+DB_PORT=
+DB_NAME=
+THORCHAIN_NODE_URL=
+```
+
 ## Anatomy
 
 Two main components
