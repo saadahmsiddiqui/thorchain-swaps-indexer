@@ -11,7 +11,7 @@ const errorLogger = createLogger({
 export default async function action() {
   const list = await getHavingState({
     state: 'STORED_INDEXED_HASH',
-    limit: 250,
+    limit: 100,
   });
 
   for (const item of list) {

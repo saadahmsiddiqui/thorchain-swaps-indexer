@@ -159,3 +159,28 @@ CREATE TABLE thorchain.refund_events (
     reason VARCHAR NOT NULL,
     PRIMARY KEY (protocol, id, height)
 );
+
+CREATE TABLE thorchain.swap_end_block_events (
+    swap_event_id BIGSERIAL,
+    height BIGINT NOT NULL,
+    id VARCHAR NOT NULL,
+    chain VARCHAR NOT NULL,
+    coin VARCHAR NOT NULL,
+    emit_asset VARCHAR NOT NULL,
+    from_address VARCHAR NOT NULL,
+    to_address VARCHAR NOT NULL,
+    memo TEXT,
+    mode VARCHAR NOT NULL,
+    pool VARCHAR NOT NULL,
+    liquidity_fee BIGINT NOT NULL,
+    liquidity_fee_in_rune BIGINT NOT NULL,
+    pool_slip INTEGER NOT NULL,
+    swap_slip INTEGER NOT NULL,
+    swap_target BIGINT NOT NULL,
+    streaming_swap_count INTEGER NOT NULL,
+    streaming_swap_quantity INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (swap_event_id)
+);
+
+CREATE INDEX idx_swap_end_block_events_height ON thorchain.swap_end_block_events(height);

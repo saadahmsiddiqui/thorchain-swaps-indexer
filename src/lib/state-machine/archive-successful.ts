@@ -31,7 +31,7 @@ function isChanged(stageDb: TransactionStage, stage: Stages): boolean {
 export default async function action() {
   const list = await getHavingState({
     state: 'ARCHIVE_SUCCESSFUL',
-    limit: 250,
+    limit: 100,
   });
 
   for (const item of list) {

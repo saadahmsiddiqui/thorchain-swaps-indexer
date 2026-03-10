@@ -9,7 +9,7 @@ export async function store(
 
   const cols = `protocol, hash, height, state, created_at`;
   const placeholders = `$1,$2,$3,$4${blocktime ? ',$5' : ''}`;
-  const query = `INSERT INTO thorchain.indexed_hashes(${cols}) VALUES (${placeholders})`;
+  const query = `INSERT INTO thorchain.indexed_hashes(${cols}) VALUES (${placeholders}) ON CONFLICT DO NOTHING;`;
   await dbReadWrite.query(query, [
     indexedHash.protocol,
     indexedHash.hash,

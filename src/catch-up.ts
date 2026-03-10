@@ -4,10 +4,13 @@ import { getIndexedHeight, updateIndexedHeight } from './lib/indexer/state-utils
 import { EndBlockEvent, get as getBlock, Root, Tx } from './api/thorchain/block';
 import { store } from './lib/transactions/indexed-hashes/repository';
 import { scheduleJob } from 'node-schedule';
-import { isRefundEvent } from './lib/end-block-events/utils';
+import { isRefundEvent, isSwapEvent } from './lib/end-block-events/utils';
 import { buildRefundEvent } from './lib/refund-events/refund-event';
 import { store as storeRefundEvent } from './lib/refund-events/repository';
+import { store as storeSwapEvent } from './lib/swap-events/repository';
 import { getLastBlockSafe } from './lib/utils';
+import { isSwapMemo } from './lib/memo';
+import { buildSwapEvent } from './lib/swap-events/swap-event';
 
 config();
 
@@ -21,6 +24,8 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
   console.log(`process-txs num txs: `, txs.length);
 
   for (const transaction of txs) {
+    const memo = transaction.tx.body?.memo ?? null;
+
     const indexedHash = {
       protocol: 'thorchain',
       state: 'STORED_INDEXED_HASH',
@@ -29,7 +34,10 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
     };
 
     try {
-      await store(indexedHash, time);
+      const isSwap = isSwapMemo(memo);
+      if (isSwap) {
+        await store(indexedHash, time);
+      }
     } catch (error: any) {
       const message = error.message;
       errorLogger.info(`process-txs error: ` + message);
@@ -37,22 +45,39 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
   }
 }
 
-async function processEndBlockEvents(height: number, events: EndBlockEvent[]): Promise<void> {
+async function processEndBlockEvents(
+  time: string,
+  height: number,
+  events: EndBlockEvent[],
+): Promise<void> {
   console.log(`process-end-block-events num events: `, events.length);
 
   for (const event of events) {
-    if (isRefundEvent(event)) {
-      const block = {
-        height,
-      };
+    try {
+      if (isRefundEvent(event)) {
+        const block = {
+          height,
+        };
 
-      try {
         const refundEvent = buildRefundEvent(block, event);
         await storeRefundEvent(refundEvent);
-      } catch (error: any) {
-        const message = error.message;
-        errorLogger.info(`process-end-block-events error: ` + message);
+      } else if (isSwapEvent(event)) {
+        const swapEvent = buildSwapEvent(height.toString(), event);
+        await storeSwapEvent(swapEvent);
+        await store(
+          {
+            protocol: 'thorchain',
+            state: 'STORED_INDEXED_HASH',
+            hash: swapEvent.id,
+            height: height.toString(),
+          },
+          time,
+        );
       }
+    } catch (error: any) {
+      console.error(error);
+      const message = error.message;
+      errorLogger.info(`process-end-block-events error: ` + message);
     }
   }
 }
@@ -77,7 +102,7 @@ async function indexHeight(height: number): Promise<{ successful: boolean; halt:
   }
 
   if (block.end_block_events && Array.isArray(block.end_block_events)) {
-    await processEndBlockEvents(height, block.end_block_events);
+    await processEndBlockEvents(block.header.time, height, block.end_block_events);
   }
 
   return { successful: true, halt: false };

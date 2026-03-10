@@ -11,3 +11,12 @@ export function isRefundEvent(data: any): boolean {
 
   return false;
 }
+
+/**
+ *
+ * @param data
+ * @returns
+ */
+export function isSwapEvent(data: any): boolean {
+  return data && data.type && data.type === 'swap';
+}
