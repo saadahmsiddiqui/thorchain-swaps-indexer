@@ -39,7 +39,7 @@ export async function updateTransactionOutTx(
       from_address = $3,
       to_address = $4,
       memo = $5
-    WHERE id = $1 AND tx_base_info_id $6
+    WHERE id = $1 AND tx_base_info_id = $6
   `;
   await db.query(query, [
     id,

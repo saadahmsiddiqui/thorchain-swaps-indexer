@@ -1,11 +1,11 @@
 import winston, { createLogger } from 'winston';
 import { getHavingState } from '@/lib/transactions/indexed-hashes/repository';
-import { get as getDetails } from '@/api/thorchain/tx-details';
+import { updateArchivedSwap } from '../transactions/update-archived-swap';
 
 const errorLogger = createLogger({
   format: winston.format.json(),
-  defaultMeta: { service: 'on-reindex-data' },
-  transports: [new winston.transports.File({ filename: 'on-reindex-data.log' })],
+  defaultMeta: { service: 'REINDEX_DATA' },
+  transports: [new winston.transports.Console()],
 });
 
 export default async function action() {
@@ -16,8 +16,7 @@ export default async function action() {
 
   for (const item of list) {
     try {
-      const details = getDetails(item.hash);
-      if ('code' in details) return;
+      await updateArchivedSwap(item.hash);
     } catch (error: any) {
       const message = error.message;
       errorLogger.error(`${item.hash} error: ${message}`);

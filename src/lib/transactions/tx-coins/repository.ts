@@ -32,7 +32,7 @@ export async function updateTransactionCoins(
       coin_type = $2,
       asset = $3,
       amount = $4
-    WHERE id = $1
+    WHERE id = $1 and tx_id = $5
   `;
   await db.query(query, [id, data.coin_type, data.asset, data.amount, tx_id]);
   return true;

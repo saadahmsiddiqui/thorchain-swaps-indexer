@@ -1,35 +1,69 @@
 import { config } from 'dotenv';
+config();
+
 import { scheduleJob } from 'node-schedule';
+import { Mutex } from 'async-mutex';
+
 import storedIndexedHash from '@/lib/state-machine/stored-indexed-hash';
 import archiveSuccessful from '@/lib/state-machine/archive-successful';
 import reIndexData from '@/lib/state-machine/reindex-data';
-import { Mutex } from 'async-mutex';
 
-config();
+import { IndexedHashState } from './lib/types';
+import { ArchiveSwapResult } from './lib/transactions/archive-swap';
 
-const lock = new Mutex();
-
-const schedule = `*/10 * * * * *`;
-
-process.title = `thorchain-indexer-sm ` + process.argv[2];
-
-scheduleJob(process.title, schedule, async () => {
+async function transition(lock: Mutex, state: IndexedHashState): Promise<void> {
   if (lock.isLocked()) return;
-
   await lock.acquire();
-  switch (process.argv[2]) {
-    case 'STORED_INDEXED_HASH':
+
+  switch (state) {
+    case 'STORED_INDEXED_HASH': {
       await storedIndexedHash();
       break;
-    case 'REINDEX_DATA':
+    }
+    case 'REINDEX_DATA': {
       await reIndexData();
       break;
-    case 'ARCHIVE_SUCCESSFUL':
+    }
+    case 'ARCHIVE_SUCCESSFUL': {
       await archiveSuccessful();
       break;
-    default:
-      process.exit();
+    }
+    case ArchiveSwapResult.ErrorStages: {
+      console.log(state);
+      break;
+    }
+    case ArchiveSwapResult.ErrorDetails: {
+      console.log(state);
+      break;
+    }
+    case ArchiveSwapResult.ArchiveSuccessful: {
+      console.log(state);
+      break;
+    }
+    case ArchiveSwapResult.Skipped: {
+      console.log(state);
+      break;
+    }
+    case ArchiveSwapResult.ArchiveFailed: {
+      console.log(state);
+      break;
+    }
   }
 
   lock.release();
-});
+}
+
+const scheduleForAll = `*/10 * * * * *`;
+
+const storedIndexedHashLock = new Mutex();
+scheduleJob('STORED_INDEXED_HASH', scheduleForAll, async () =>
+  transition(storedIndexedHashLock, 'STORED_INDEXED_HASH'),
+);
+const reIndexDataLock = new Mutex();
+scheduleJob('REINDEX_DATA', scheduleForAll, async () =>
+  transition(reIndexDataLock, 'REINDEX_DATA'),
+);
+const archiveSuccessfulLock = new Mutex();
+scheduleJob('ARCHIVE_SUCCESSFUL', scheduleForAll, async () =>
+  transition(archiveSuccessfulLock, 'ARCHIVE_SUCCESSFUL'),
+);

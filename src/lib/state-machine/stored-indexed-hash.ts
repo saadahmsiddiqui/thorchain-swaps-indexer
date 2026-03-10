@@ -4,8 +4,8 @@ import winston, { createLogger } from 'winston';
 
 const errorLogger = createLogger({
   format: winston.format.json(),
-  defaultMeta: { service: 'on-swaps-archived' },
-  transports: [new winston.transports.File({ filename: 'on-swaps-archived.log' })],
+  defaultMeta: { service: 'STORED_INDEXED_HASH' },
+  transports: [new winston.transports.Console()],
 });
 
 export default async function action() {

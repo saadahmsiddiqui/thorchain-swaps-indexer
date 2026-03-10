@@ -1,27 +1,28 @@
 import { config } from 'dotenv';
+config();
+
 import winston, { createLogger } from 'winston';
 import { getIndexedHeight, updateIndexedHeight } from './lib/indexer/state-utils';
 import { EndBlockEvent, get as getBlock, Root, Tx } from './api/thorchain/block';
-import { store } from './lib/transactions/indexed-hashes/repository';
 import { scheduleJob } from 'node-schedule';
 import { isRefundEvent, isSwapEvent } from './lib/end-block-events/utils';
 import { buildRefundEvent } from './lib/refund-events/refund-event';
+import { store } from './lib/transactions/indexed-hashes/repository';
 import { store as storeRefundEvent } from './lib/refund-events/repository';
 import { store as storeSwapEvent } from './lib/swap-events/repository';
 import { getLastBlockSafe } from './lib/utils';
 import { isSwapMemo } from './lib/memo';
 import { buildSwapEvent } from './lib/swap-events/swap-event';
+import { Mutex } from 'async-mutex';
 
-config();
-
-const errorLogger = createLogger({
+const logger = createLogger({
   format: winston.format.json(),
-  defaultMeta: { service: 'catch-up' },
-  transports: [new winston.transports.File({ filename: 'catch-up-errors.log' })],
+  defaultMeta: { service: 'indexer-catch-up' },
+  transports: [new winston.transports.Console()],
 });
 
 async function processTxs(height: number, time: string, txs: Tx[]): Promise<void> {
-  console.log(`process-txs num txs: `, txs.length);
+  logger.info(`process-txs num txs: `, txs.length);
 
   for (const transaction of txs) {
     const hasMemoInBody = transaction.tx.body && transaction.tx.body.memo.length;
@@ -51,7 +52,7 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
       }
     } catch (error: any) {
       const message = error.message;
-      errorLogger.info(`process-txs error: ` + message);
+      logger.error(`process-txs error: ` + message);
     }
   }
 }
@@ -61,7 +62,7 @@ async function processEndBlockEvents(
   height: number,
   events: EndBlockEvent[],
 ): Promise<void> {
-  console.log(`process-end-block-events num events: `, events.length);
+  logger.info(`process-end-block-events num events: ` + events.length);
 
   for (const event of events) {
     try {
@@ -86,15 +87,14 @@ async function processEndBlockEvents(
         );
       }
     } catch (error: any) {
-      console.error(error);
       const message = error.message;
-      errorLogger.info(`process-end-block-events error: ` + message);
+      logger.error(`process-end-block-events error: ` + message);
     }
   }
 }
 
 async function indexHeight(height: number): Promise<{ successful: boolean; halt: boolean }> {
-  console.log('index-height processing block: ', height);
+  logger.info('index-height processing block: ' + height);
   // eslint-disable-next-line no-useless-assignment
   let block: Root | null = null;
 
@@ -119,22 +119,32 @@ async function indexHeight(height: number): Promise<{ successful: boolean; halt:
   return { successful: true, halt: false };
 }
 
-scheduleJob('thorchain-indexer', '*/1 * * * *', async () => {
-  console.log('thorchain-indexer started');
+const lock = new Mutex();
+
+scheduleJob('catch-up', '*/1 * * * *', async () => {
+  if (lock.isLocked()) {
+    logger.info('catch-up job already running... job terminated');
+    return;
+  }
+
+  await lock.acquire();
+  logger.info('catch-up job started');
   const currentHeight = await getLastBlockSafe();
   if (currentHeight === null) return;
-  console.log('thorchain-indexer current height: ', currentHeight);
+  logger.info('catch-up current height: ' + currentHeight);
 
   const indexedHeight = getIndexedHeight('thorchain');
-  console.log('thorchain-indexer indexed height: ', indexedHeight);
+  logger.info('catch-up indexed height: ' + indexedHeight);
   if (indexedHeight >= currentHeight) return;
   const difference = currentHeight - indexedHeight;
 
   for (let index = 1; index < difference; index++) {
     const height = index + indexedHeight;
-    console.log('thorchain-indexer processing height: ', height);
+    logger.info('catch-up processing height: ' + height);
     const state = await indexHeight(height);
     if (state.halt) return;
     updateIndexedHeight('thorchain', height);
   }
+
+  lock.release();
 });

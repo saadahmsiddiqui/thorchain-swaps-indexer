@@ -4,29 +4,15 @@ import {
   getTransactionStage as getTransactionStageFromDb,
   updateTransactionStage,
 } from '@/lib/transactions/tx-stages/repostiory';
-import { get as getTransactionStageFromNode, Stages } from '@/api/thorchain/tx-stages';
+import { get as getTransactionStageFromNode } from '@/api/thorchain/tx-stages';
 import { getClient } from '@/database';
-import { TransactionStage } from '@/lib/transactions/types';
+import { stagesChanged } from './utils';
 
 const errorLogger = createLogger({
   format: winston.format.json(),
-  defaultMeta: { service: 'on-archive-success' },
-  transports: [new winston.transports.File({ filename: 'on-archive-success.log' })],
+  defaultMeta: { service: 'ARCHIVE_SUCCESSFUL' },
+  transports: [new winston.transports.Console()],
 });
-
-function isChanged(stageDb: TransactionStage, stage: Stages): boolean {
-  return (
-    stageDb.inbound_observed_final_count !== stage.inbound_observed.final_count ||
-    stageDb.inbound_observed_completed !== stage.inbound_observed.completed ||
-    stageDb.inbound_confirmation_counted_remaining_seconds !==
-      (stage.inbound_confirmation_counted?.remaining_confirmation_seconds ?? null) ||
-    stageDb.inbound_confirmation_counted_completed !==
-      (stage.inbound_confirmation_counted?.completed ?? null) ||
-    stageDb.inbound_finalised_completed !== (stage.inbound_finalised?.completed ?? null) ||
-    stageDb.swap_status_pending !== (stage.swap_status?.pending ?? null) ||
-    stageDb.swap_finalised_completed !== (stage.swap_finalised?.completed ?? null)
-  );
-}
 
 export default async function action() {
   const list = await getHavingState({
@@ -47,7 +33,7 @@ export default async function action() {
         const nodeStage = await getTransactionStageFromNode(item.hash);
         if ('code' in nodeStage) return;
 
-        const changed = isChanged(stage, nodeStage);
+        const changed = stagesChanged(stage, nodeStage);
         if (changed) {
           updateState(item.hash, 'REINDEX_DATA');
         }
