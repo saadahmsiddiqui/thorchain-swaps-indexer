@@ -19,6 +19,8 @@ import { getTransactionCoins } from './tx-coins/repository';
 import { getTransactionStage } from './tx-stages/repostiory';
 import { get as getRefundEvent } from '@/lib/refund-events/repository';
 import { RefundEvent } from '../refund-events/refund-event';
+import { SwapEvent } from '../swap-events/swap-event';
+import { get as getSwapEvents } from '../swap-events/repository';
 
 type ActionWithMaxGas = TransactionAction & { maxGas: ActionMaxGas[] };
 type OutTxWithCoins = TransactionOutTx & {
@@ -37,6 +39,7 @@ export type Swap = {
   txs: TxWithCoins[];
   stages: TransactionStage | null;
   refund: RefundEvent | null;
+  swapEvents: SwapEvent[];
 };
 
 export async function get(hash: string): Promise<null | Swap> {
@@ -82,6 +85,7 @@ export async function get(hash: string): Promise<null | Swap> {
 
   const stages = await getTransactionStage(hash, db);
   const refund = await getRefundEvent(hash);
+  const swapEvents: SwapEvent[] = await getSwapEvents(hash);
 
   return {
     baseInfo,
@@ -90,5 +94,6 @@ export async function get(hash: string): Promise<null | Swap> {
     txs: txsWithCoins,
     stages,
     refund,
+    swapEvents,
   };
 }
