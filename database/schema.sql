@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS thorchain;
+
 CREATE TABLE thorchain.transactions_stages (
     protocol VARCHAR(50),
     hash TEXT,
