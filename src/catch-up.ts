@@ -26,7 +26,7 @@ const logger = createLogger({
 });
 
 async function processTxs(height: number, time: string, txs: Tx[]): Promise<void> {
-    logger.info(`process-txs num txs: `, txs.length);
+    logger.info(`process-txs num txs: ` + txs.length);
 
     for (const transaction of txs) {
         const hasMemoInBody =
