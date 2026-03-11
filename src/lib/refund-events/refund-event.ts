@@ -1,9 +1,9 @@
 export type RefundEvent = {
-  protocol: string;
-  height: string;
-  id: string;
-  coin: string;
-  reason: string;
+    protocol: string;
+    height: string;
+    id: string;
+    coin: string;
+    reason: string;
 };
 
 /**
@@ -16,14 +16,14 @@ export type RefundEvent = {
  * @returns {RefundedTransaction}
  */
 export function buildRefundEvent(block: any, event: any): RefundEvent {
-  const { height } = block;
-  const { id, coin, reason } = event;
+    const { height } = block;
+    const { id, coin, reason } = event;
 
-  return {
-    protocol: 'thorchain',
-    height: height.toString(),
-    id,
-    coin,
-    reason,
-  };
+    return {
+        protocol: 'thorchain',
+        height: height.toString(),
+        id,
+        coin,
+        reason,
+    };
 }

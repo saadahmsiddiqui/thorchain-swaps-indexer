@@ -5,11 +5,11 @@
  * @returns {boolean}
  */
 export function isRefundEvent(data: any): boolean {
-  if (data.type && data.id && data.coin && data.reason) {
-    return data.type === 'refund';
-  }
+    if (data.type && data.id && data.coin && data.reason) {
+        return data.type === 'refund';
+    }
 
-  return false;
+    return false;
 }
 
 /**
@@ -18,5 +18,5 @@ export function isRefundEvent(data: any): boolean {
  * @returns
  */
 export function isSwapEvent(data: any): boolean {
-  return data && data.type && data.type === 'swap';
+    return data && data.type && data.type === 'swap';
 }
