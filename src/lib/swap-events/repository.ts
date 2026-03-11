@@ -2,7 +2,7 @@ import { getClient } from '@/database';
 import { SwapEvent } from './swap-event';
 
 export async function get(txId: string): Promise<SwapEvent[]> {
-    const db = getClient('rw');
+    const db = getClient();
     const query = `SELECT height, id, chain, coin, emit_asset, from_address, to_address, memo, mode, pool, liquidity_fee, liquidity_fee_in_native_currency, pool_slip, swap_slip, swap_target, streaming_swap_count, streaming_swap_quantity, created_at FROM thorchain.swap_end_block_events WHERE id = $1;`;
     const result = await db.query(query, [txId]);
     return result.rows;

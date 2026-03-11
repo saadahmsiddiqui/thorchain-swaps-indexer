@@ -61,7 +61,7 @@ export default async function action() {
                         outbound_delay_remaining_delay_seconds:
                             nodeStage.outbound_delay?.remaining_delay_seconds ?? null,
                     },
-                    getClient(),
+                    getClient('rw'),
                 );
             }
         } catch (error: any) {

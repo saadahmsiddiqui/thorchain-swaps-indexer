@@ -2,7 +2,7 @@ import { getClient } from '@/database';
 import { RefundEvent } from './refund-event';
 
 export async function get(id: string): Promise<RefundEvent | null> {
-    const db = getClient('rw');
+    const db = getClient('r');
     const query = `SELECT protocol, height, id, coin, reason FROM thorchain.refund_events WHERE id = $1;`;
     const result = await db.query(query, [id]);
     return result.rows[0] ?? null;
