@@ -1,56 +1,56 @@
 import { THORCHAIN_NODE_URL } from '@/config/constants';
 
 export interface Stages {
-  inbound_observed: InboundObserved;
-  inbound_confirmation_counted?: InboundConfirmationCounted;
-  inbound_finalised?: InboundFinalised;
-  swap_status?: SwapStatus;
-  swap_finalised?: SwapFinalised;
-  outbound_signed?: {
-    scheduled_outbound_height: number;
-  };
-  outbound_delay?: {
-    remaining_delay_blocks: number;
-    remaining_delay_seconds: number;
-  };
+    inbound_observed: InboundObserved;
+    inbound_confirmation_counted?: InboundConfirmationCounted;
+    inbound_finalised?: InboundFinalised;
+    swap_status?: SwapStatus;
+    swap_finalised?: SwapFinalised;
+    outbound_signed?: {
+        scheduled_outbound_height: number;
+    };
+    outbound_delay?: {
+        remaining_delay_blocks: number;
+        remaining_delay_seconds: number;
+    };
 }
 
 export interface InboundObserved {
-  final_count: number;
-  completed: boolean;
+    final_count: number;
+    completed: boolean;
 }
 
 export interface InboundConfirmationCounted {
-  remaining_confirmation_seconds: number;
-  completed: boolean;
+    remaining_confirmation_seconds: number;
+    completed: boolean;
 }
 
 export interface InboundFinalised {
-  completed: boolean;
+    completed: boolean;
 }
 
 export interface SwapStatus {
-  pending: boolean;
-  streaming?: {
-    quantity: number;
-    count: number;
-    interval: number;
-  };
+    pending: boolean;
+    streaming?: {
+        quantity: number;
+        count: number;
+        interval: number;
+    };
 }
 
 export interface SwapFinalised {
-  completed: boolean;
+    completed: boolean;
 }
 
 export interface StagesError {
-  code: number;
-  message: string;
-  details: Array<any>;
+    code: number;
+    message: string;
+    details: Array<any>;
 }
 
 export async function get(hash: string): Promise<StagesError | Stages> {
-  const url = THORCHAIN_NODE_URL + '/thorchain/tx/stages/' + hash;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json as StagesError | Stages;
+    const url = THORCHAIN_NODE_URL + '/thorchain/tx/stages/' + hash;
+    const response = await fetch(url);
+    const json = await response.json();
+    return json as StagesError | Stages;
 }
