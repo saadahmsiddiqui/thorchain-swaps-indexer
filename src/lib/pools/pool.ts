@@ -1,0 +1,27 @@
+export type Pool = {
+    asset: string;
+    height: string;
+    short_code: string | null;
+    status: string;
+    pending_inbound_asset: string;
+    pending_inbound_native_currency: string;
+    balance_asset: string;
+    balance_native_currency: string;
+    asset_tor_price: string;
+    pool_units: string;
+    lp_units: string;
+    synth_units: string;
+    synth_supply: string;
+    savers_depth: string;
+    savers_units: number;
+    savers_fill_bps: string;
+    savers_capacity_remaining: string;
+    synth_mint_paused: boolean;
+    synth_supply_remaining: string;
+    derived_depth_bps: string;
+    trading_halted: boolean;
+    volume_native_currency: string;
+    volume_asset: string;
+    decimals: number | null;
+    created_at: string;
+};

@@ -14,10 +14,12 @@ import { buildRefundEvent } from './lib/refund-events/refund-event';
 import { store } from './lib/transactions/indexed-hashes/repository';
 import { store as storeRefundEvent } from './lib/refund-events/repository';
 import { store as storeSwapEvent } from './lib/swap-events/repository';
+import { store as storePool } from './lib/pools/repository';
 import { getLastBlockSafe } from './lib/utils';
 import { isSwapMemo } from './lib/memo';
 import { buildSwapEvent } from './lib/swap-events/swap-event';
 import { Mutex } from 'async-mutex';
+import { getPoolsAtHeight } from './api/thorchain/pools';
 
 const logger = createLogger({
     format: winston.format.json(),
@@ -99,6 +101,20 @@ async function processEndBlockEvents(
     }
 }
 
+async function processPools(height: number): Promise<void> {
+    try {
+        const poolsAtHeight = await getPoolsAtHeight(height);
+
+        for (const pool of poolsAtHeight) {
+            await storePool({ height, pool });
+        }
+    } catch (error: any) {
+        const message = error.message;
+        logger.error(`process-pools error: ` + message);
+        console.error(error);
+    }
+}
+
 async function indexHeight(height: number): Promise<{ successful: boolean; halt: boolean }> {
     logger.info('index-height processing block: ' + height);
     // eslint-disable-next-line no-useless-assignment
@@ -121,6 +137,8 @@ async function indexHeight(height: number): Promise<{ successful: boolean; halt:
     if (block.end_block_events && Array.isArray(block.end_block_events)) {
         await processEndBlockEvents(block.header.time, height, block.end_block_events);
     }
+
+    await processPools(height);
 
     return { successful: true, halt: false };
 }

@@ -173,7 +173,7 @@ CREATE TABLE thorchain.swap_end_block_events (
     mode VARCHAR NOT NULL,
     pool VARCHAR NOT NULL,
     liquidity_fee BIGINT NOT NULL,
-    liquidity_fee_in_rune BIGINT NOT NULL,
+    liquidity_fee_in_native_currency BIGINT NOT NULL,
     pool_slip INTEGER NOT NULL,
     swap_slip INTEGER NOT NULL,
     swap_target BIGINT NOT NULL,
@@ -190,4 +190,33 @@ CREATE TABLE thorchain.indexed_heights (
     protocol VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (height, protocol)
+);
+
+CREATE TABLE thorchain.pools (
+    asset VARCHAR NOT NULL,
+    height BIGINT NOT NULL,
+    short_code VARCHAR,
+    status VARCHAR NOT NULL,
+    pending_inbound_asset NUMERIC(50, 0) NOT NULL,
+    pending_inbound_native_currency NUMERIC(50, 0) NOT NULL,
+    balance_asset NUMERIC(50, 0) NOT NULL,
+    balance_native_currency NUMERIC(50, 0) NOT NULL,
+    asset_tor_price NUMERIC(50, 0) NOT NULL,
+    pool_units NUMERIC(50, 0) NOT NULL,
+    lp_units NUMERIC(50, 0) NOT NULL,
+    synth_units NUMERIC(50, 0) NOT NULL,
+    synth_supply NUMERIC(50, 0) NOT NULL,
+    savers_depth NUMERIC(50, 0) NOT NULL,
+    savers_units NUMERIC(50, 0) NOT NULL,
+    savers_fill_bps VARCHAR NOT NULL,
+    savers_capacity_remaining NUMERIC(50, 0) NOT NULL,
+    synth_mint_paused BOOLEAN NOT NULL,
+    synth_supply_remaining NUMERIC(50, 0) NOT NULL,
+    derived_depth_bps INTEGER NOT NULL,
+    trading_halted BOOLEAN NOT NULL,
+    volume_native_currency NUMERIC(50, 0) NOT NULL,
+    volume_asset NUMERIC(50, 0) NOT NULL,
+    decimals INTEGER,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (asset, height)
 );
