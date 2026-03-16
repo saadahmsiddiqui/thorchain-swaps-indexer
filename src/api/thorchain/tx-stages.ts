@@ -8,6 +8,7 @@ export interface Stages {
     swap_finalised?: SwapFinalised;
     outbound_signed?: {
         scheduled_outbound_height: number;
+        completed?: boolean;
     };
     outbound_delay?: {
         remaining_delay_blocks: number;

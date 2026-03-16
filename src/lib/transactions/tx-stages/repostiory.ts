@@ -5,8 +5,8 @@ export async function storeTransactionStage(
     data: Omit<TransactionStage, 'created_at' | 'updated_at'>,
     db: Pool,
 ): Promise<boolean> {
-    const cols = `protocol, hash, inbound_observed_final_count, inbound_observed_completed, inbound_confirmation_counted_remaining_seconds, inbound_confirmation_counted_completed, inbound_finalised_completed, swap_status_pending, swap_finalised_completed, streaming_interval, streaming_quantity, streaming_count, outbound_signed_scheduled_outbound_height, outbound_delay_remaining_delay_blocks, outbound_delay_remaining_delay_seconds`;
-    const query = `INSERT INTO thorchain.transactions_stages (${cols}) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) ON CONFLICT DO NOTHING;`;
+    const cols = `protocol, hash, inbound_observed_final_count, inbound_observed_completed, inbound_confirmation_counted_remaining_seconds, inbound_confirmation_counted_completed, inbound_finalised_completed, swap_status_pending, swap_finalised_completed, streaming_interval, streaming_quantity, streaming_count, outbound_signed_scheduled_outbound_height, outbound_signed_completed, outbound_delay_remaining_delay_blocks, outbound_delay_remaining_delay_seconds`;
+    const query = `INSERT INTO thorchain.transactions_stages (${cols}) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) ON CONFLICT DO NOTHING;`;
     await db.query(query, [
         data.protocol,
         data.hash,
@@ -21,6 +21,7 @@ export async function storeTransactionStage(
         data.streaming_quantity,
         data.streaming_count,
         data.outbound_signed_scheduled_outbound_height,
+        data.outbound_signed_completed,
         data.outbound_delay_remaining_delay_blocks,
         data.outbound_delay_remaining_delay_seconds,
     ]);
@@ -53,8 +54,9 @@ export async function updateTransactionStage(
       streaming_quantity = $10,
       streaming_count = $11,
       outbound_signed_scheduled_outbound_height = $12,
-      outbound_delay_remaining_delay_blocks = $13,
-      outbound_delay_remaining_delay_seconds = $14
+      outbound_signed_completed = $13,
+      outbound_delay_remaining_delay_blocks = $14,
+      outbound_delay_remaining_delay_seconds = $15
     WHERE hash = $1
   `;
     await db.query(query, [
@@ -70,6 +72,7 @@ export async function updateTransactionStage(
         data.streaming_quantity,
         data.streaming_count,
         data.outbound_signed_scheduled_outbound_height,
+        data.outbound_signed_completed,
         data.outbound_delay_remaining_delay_blocks,
         data.outbound_delay_remaining_delay_seconds,
     ]);

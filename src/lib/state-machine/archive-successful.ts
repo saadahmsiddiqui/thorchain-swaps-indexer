@@ -25,18 +25,8 @@ export default async function action() {
             const stage = await getTransactionStageFromDb(item.hash, getClient());
 
             if (stage) {
-                if (stage.swap_finalised_completed && !stage.swap_status_pending) {
-                    updateState(item.hash, 'COMPLETE');
-                    continue;
-                }
-
                 const nodeStage = await getTransactionStageFromNode(item.hash);
                 if ('code' in nodeStage) return;
-
-                const changed = stagesChanged(stage, nodeStage);
-                if (changed) {
-                    updateState(item.hash, 'REINDEX_DATA');
-                }
 
                 await updateTransactionStage(
                     {
@@ -56,6 +46,7 @@ export default async function action() {
                         streaming_count: nodeStage.swap_status?.streaming?.count ?? 0,
                         outbound_signed_scheduled_outbound_height:
                             nodeStage.outbound_signed?.scheduled_outbound_height ?? null,
+                        outbound_signed_completed: nodeStage.outbound_signed?.completed ?? null,
                         outbound_delay_remaining_delay_blocks:
                             nodeStage.outbound_delay?.remaining_delay_blocks ?? null,
                         outbound_delay_remaining_delay_seconds:
@@ -63,6 +54,24 @@ export default async function action() {
                     },
                     getClient('rw'),
                 );
+
+                const changed = stagesChanged(stage, nodeStage);
+                if (changed) {
+                    updateState(item.hash, 'REINDEX_DATA');
+                    continue;
+                }
+
+                const isSwapComplete =
+                    Boolean(nodeStage.swap_finalised) && nodeStage.swap_finalised!.completed;
+
+                const isOutboundComplete = nodeStage.outbound_signed
+                    ? nodeStage.outbound_signed.completed
+                    : true;
+
+                if (isSwapComplete && isOutboundComplete) {
+                    updateState(item.hash, 'COMPLETE');
+                    continue;
+                }
             }
         } catch (error: any) {
             const message = error.message;
