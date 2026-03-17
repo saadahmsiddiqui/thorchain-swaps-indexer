@@ -5,7 +5,8 @@ import { get as getTxStages } from '@/api/thorchain/tx-stages';
 import { stagesChanged } from '../state-machine/utils';
 import { getClient } from '@/database';
 import { updateTransactionStage } from './tx-stages/repostiory';
-import { updateTransactionAction } from './tx-actions/repository';
+import { storeTransactionAction, updateTransactionAction } from './tx-actions/repository';
+import { storeActionMaxGas, updateActionMaxGas } from './action-max-gas/repository';
 import { updateState } from './indexed-hashes/repository';
 import { updateTransactionBaseInfo } from './tx-base-info/repository';
 import { storeTransactionOutTx, updateTransactionOutTx } from './out-txs/repository';
@@ -67,14 +68,12 @@ export async function updateArchivedSwap(hash: string) {
                         stages.outbound_delay?.remaining_delay_blocks ?? null,
                     outbound_delay_remaining_delay_seconds:
                         stages.outbound_delay?.remaining_delay_seconds ?? null,
+                    outbound_signed_completed: stages.outbound_signed?.completed ?? null,
                 },
                 db,
             );
 
             if (detail.actions && Array.isArray(detail.actions)) {
-                const updated = new Set();
-                const toInsert = new Set();
-
                 for (const action of detail.actions) {
                     const isStored = fromDb.actions.find((x) => x.in_hash === action.in_hash);
 
@@ -92,15 +91,52 @@ export async function updateArchivedSwap(hash: string) {
                             vault_pub_key: action.vault_pub_key ?? null,
                             vault_pub_key_eddsa: action.vault_pub_key_eddsa ?? null,
                         });
-                        updated.add(action.in_hash);
-                        // TODO: UPDATE ACTION_MAX_GAS
+
+                        for (const gas of action.max_gas) {
+                            const storedGas = isStored.maxGas.find((g) => g.asset === gas.asset);
+                            if (storedGas) {
+                                await updateActionMaxGas(db, storedGas.id, isStored.id, {
+                                    asset: gas.asset,
+                                    amount: gas.amount,
+                                    decimals: gas.decimals,
+                                });
+                            } else {
+                                await storeActionMaxGas(db, {
+                                    action_id: isStored.id,
+                                    asset: gas.asset,
+                                    amount: gas.amount,
+                                    decimals: gas.decimals,
+                                });
+                            }
+                        }
                     } else {
-                        toInsert.add(action.in_hash);
+                        const newActionId = await storeTransactionAction(db, {
+                            tx_base_info_id: fromDb.baseInfo.id,
+                            chain: action.chain,
+                            to_address: action.to_address,
+                            coin_asset: action.coin.asset,
+                            coin_amount: action.coin.amount,
+                            memo: action.memo,
+                            original_memo: action.original_memo,
+                            gas_rate: action.gas_rate,
+                            in_hash: action.in_hash,
+                            clout_spent: action.clout_spent,
+                            vault_pub_key: action.vault_pub_key ?? null,
+                            vault_pub_key_eddsa: action.vault_pub_key_eddsa ?? null,
+                        });
+
+                        if (newActionId) {
+                            for (const gas of action.max_gas) {
+                                await storeActionMaxGas(db, {
+                                    action_id: newActionId,
+                                    asset: gas.asset,
+                                    amount: gas.amount,
+                                    decimals: gas.decimals,
+                                });
+                            }
+                        }
                     }
                 }
-
-                // TODO: INSERT ACTIONS PREVIOUSLY NOT INSERTED
-                console.log(`update-archived-swap ${hash} ACTIONS NOT STORED: ` + toInsert.size);
             }
 
             if (detail.out_txs && Array.isArray(detail.out_txs)) {
