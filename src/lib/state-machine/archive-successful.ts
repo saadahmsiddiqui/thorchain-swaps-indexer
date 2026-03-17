@@ -27,7 +27,7 @@ export default async function action() {
 
                 const changed = stagesChanged(stage, nodeStage);
                 if (changed) {
-                    updateState(item.hash, 'REINDEX_DATA');
+                    await updateState(item.hash, 'REINDEX_DATA');
                     continue;
                 }
 
@@ -39,7 +39,7 @@ export default async function action() {
                     : true;
 
                 if (isSwapComplete && isOutboundComplete) {
-                    updateState(item.hash, 'COMPLETE');
+                    await updateState(item.hash, 'COMPLETE');
                     continue;
                 }
             }
