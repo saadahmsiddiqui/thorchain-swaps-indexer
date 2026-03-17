@@ -35,7 +35,7 @@ export default async function action() {
                     Boolean(nodeStage.swap_finalised) && nodeStage.swap_finalised!.completed;
 
                 const isOutboundComplete = nodeStage.outbound_signed
-                    ? nodeStage.outbound_signed.completed
+                    ? Boolean(nodeStage.outbound_signed.completed)
                     : true;
 
                 if (isSwapComplete && isOutboundComplete) {
