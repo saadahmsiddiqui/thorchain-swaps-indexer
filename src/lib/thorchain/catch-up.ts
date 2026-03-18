@@ -122,14 +122,19 @@ export async function indexHeight(height: number): Promise<{ successful: boolean
         return { successful: false, halt: true };
     }
 
-    if (block.txs && Array.isArray(block.txs)) {
-        await processTxs(height, block.header.time, block.txs);
+    try {
+        if (block.txs && Array.isArray(block.txs)) {
+            await processTxs(height, block.header.time, block.txs);
+        }
+
+        if (block.end_block_events && Array.isArray(block.end_block_events)) {
+            await processEndBlockEvents(block.header.time, height, block.end_block_events);
+        }
+
+        await processPools(height);
+    } catch {
+        return { successful: false, halt: false };
     }
 
-    if (block.end_block_events && Array.isArray(block.end_block_events)) {
-        await processEndBlockEvents(block.header.time, height, block.end_block_events);
-    }
-
-    await processPools(height);
     return { successful: true, halt: false };
 }
