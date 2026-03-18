@@ -89,15 +89,15 @@ scheduleJob('ARCHIVE_SUCCESSFUL', scheduleForAll, async () =>
     transition('mayachain', mayaAsLock, 'ARCHIVE_SUCCESSFUL'),
 );
 
-// const thorSihLock = new Mutex();
-// scheduleJob('STORED_INDEXED_HASH', scheduleForAll, async () =>
-//     transition('thorchain', thorSihLock, 'STORED_INDEXED_HASH'),
-// );
-// const thorRILock = new Mutex();
-// scheduleJob('REINDEX_DATA', scheduleForAll, async () =>
-//     transition('thorchain', thorRILock, 'REINDEX_DATA'),
-// );
-// const thorAsLock = new Mutex();
-// scheduleJob('ARCHIVE_SUCCESSFUL', scheduleForAll, async () =>
-//     transition('thorchain', thorAsLock, 'ARCHIVE_SUCCESSFUL'),
-// );
+const thorSihLock = new Mutex();
+scheduleJob('STORED_INDEXED_HASH', scheduleForAll, async () =>
+    transition('thorchain', thorSihLock, 'STORED_INDEXED_HASH'),
+);
+const thorRILock = new Mutex();
+scheduleJob('REINDEX_DATA', scheduleForAll, async () =>
+    transition('thorchain', thorRILock, 'REINDEX_DATA'),
+);
+const thorAsLock = new Mutex();
+scheduleJob('ARCHIVE_SUCCESSFUL', scheduleForAll, async () =>
+    transition('thorchain', thorAsLock, 'ARCHIVE_SUCCESSFUL'),
+);

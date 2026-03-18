@@ -90,7 +90,7 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     await catchUp(protocol);
 });
 
-// scheduleJob('catch-up', '*/1 * * * *', async () => {
-//     const protocol: 'thorchain' | 'mayachain' = 'thorchain';
-//     await catchUp(protocol);
-// });
+scheduleJob('catch-up', '*/1 * * * *', async () => {
+    const protocol: 'thorchain' | 'mayachain' = 'thorchain';
+    await catchUp(protocol);
+});
