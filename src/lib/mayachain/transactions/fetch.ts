@@ -17,7 +17,7 @@ import { getTransactionOutTxCoins } from './out-tx-coins/repository';
 import { getInnerTransactions } from './inner-txs/repository';
 import { getTransactionCoins } from './tx-coins/repository';
 import { getTransactionStage } from './tx-stages/repostiory';
-import { get as getRefundEvent } from '@/lib/thorchain/refund-events/repository';
+import { get as getRefundEvent } from '@/lib/mayachain/refund-events/repository';
 import { RefundEvent } from '../refund-events/refund-event';
 import { SwapEvent } from '../swap-events/swap-event';
 import { get as getSwapEvents } from '../swap-events/repository';

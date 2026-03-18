@@ -1,7 +1,7 @@
-import { get as getFromDb } from '@/lib/thorchain/transactions/fetch';
+import { get as getFromDb } from '@/lib/mayachain/transactions/fetch';
 
-import { get as getTxDetails, TxDetails } from '@/api/thorchain/tx-details';
-import { get as getTxStages } from '@/api/thorchain/tx-stages';
+import { get as getTxDetails, TxDetails } from '@/api/mayachain/tx-details';
+import { get as getTxStages } from '@/api/mayachain/tx-stages';
 import { stagesChanged } from '../state-machine/utils';
 import { getClient } from '@/database';
 import { updateTransactionStage } from './tx-stages/repostiory';

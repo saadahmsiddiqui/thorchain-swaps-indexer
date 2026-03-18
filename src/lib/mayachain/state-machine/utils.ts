@@ -1,5 +1,5 @@
-import { Stages } from '@/api/thorchain/tx-stages';
-import { TransactionStage } from '@/lib/thorchain/transactions/types';
+import { Stages } from '@/api/mayachain/tx-stages';
+import { TransactionStage } from '@/lib/mayachain/transactions/types';
 
 export function stagesChanged(stageDb: TransactionStage, stage: Stages): boolean {
     return (
