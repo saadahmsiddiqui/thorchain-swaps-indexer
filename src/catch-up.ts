@@ -11,6 +11,7 @@ import { scheduleJob } from 'node-schedule';
 import { getLastBlockSafe } from './lib/utils';
 import { Mutex } from 'async-mutex';
 import { indexHeight as indexHeightThorchain } from '@/lib/thorchain/catch-up';
+import { indexHeight as indexHeightMayachain } from '@/lib/mayachain/catch-up';
 
 const logger = createLogger({
     format: winston.format.json(),
@@ -72,7 +73,12 @@ async function catchUp(protocol: 'thorchain' | 'mayachain'): Promise<void> {
             }
             await updateIndexedHeight({ protocol, height: height }, protocol);
         } else if (protocol === 'mayachain') {
-            // Handle mayachain specific logic
+            const state = await indexHeightMayachain(height);
+            if (state.halt) {
+                lock.release();
+                return;
+            }
+            await updateIndexedHeight({ protocol, height: height }, protocol);
         }
     }
 
@@ -84,7 +90,7 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     await catchUp(protocol);
 });
 
-scheduleJob('catch-up', '*/1 * * * *', async () => {
-    const protocol: 'thorchain' | 'mayachain' = 'thorchain';
-    await catchUp(protocol);
-});
+// scheduleJob('catch-up', '*/1 * * * *', async () => {
+//     const protocol: 'thorchain' | 'mayachain' = 'thorchain';
+//     await catchUp(protocol);
+// });
