@@ -98,7 +98,7 @@ CREATE TABLE mayachain.actions (
     coin_asset VARCHAR NOT NULL,
     coin_amount VARCHAR NOT NULL,
     memo VARCHAR NOT NULL,
-    original_memo VARCHAR NOT NULL,
+    original_memo VARCHAR,
     gas_rate INTEGER NOT NULL,
     in_hash VARCHAR NOT NULL,
     clout_spent VARCHAR,
