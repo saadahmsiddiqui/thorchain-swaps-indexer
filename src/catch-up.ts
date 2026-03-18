@@ -52,7 +52,7 @@ async function catchUp(protocol: 'thorchain' | 'mayachain'): Promise<void> {
         return;
     }
 
-    logger.info('catch-up indexed height: ' + indexedHeight);
+    logger.info('catch-up indexed height: ' + indexedHeight.height);
     const heightNum = Number(indexedHeight.height);
 
     if (heightNum >= currentHeight) {

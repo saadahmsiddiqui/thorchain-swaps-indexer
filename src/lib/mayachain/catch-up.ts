@@ -11,7 +11,7 @@ import { store as storeSwapEvent } from './swap-events/repository';
 import { store as storePool } from './pools/repository';
 import { isSwapMemo } from '../memo';
 import { buildSwapEvent } from './swap-events/swap-event';
-import { getPoolsAtHeight } from '../../api/mayachain/pools';
+import { getPoolsAtHeight } from '@/api/mayachain/pools';
 
 const logger = createLogger({
     format: winston.format.json(),
