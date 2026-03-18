@@ -31,7 +31,7 @@ export async function archiveSwap(swapHash: string): Promise<ArchiveSwapResult> 
 
     await storeTransactionStage(
         {
-            protocol: 'thorchain',
+            protocol: 'mayachain',
             hash: swapHash,
             inbound_observed_final_count: stages.inbound_observed.final_count,
             inbound_observed_completed: stages.inbound_observed.completed,
