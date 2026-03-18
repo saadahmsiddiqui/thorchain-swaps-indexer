@@ -11,6 +11,7 @@ export function stagesChanged(stageDb: TransactionStage, stage: Stages): boolean
             (stage.inbound_confirmation_counted?.completed ?? null) ||
         stageDb.inbound_finalised_completed !== (stage.inbound_finalised?.completed ?? null) ||
         stageDb.swap_status_pending !== (stage.swap_status?.pending ?? null) ||
-        stageDb.swap_finalised_completed !== (stage.swap_finalised?.completed ?? null)
+        stageDb.swap_finalised_completed !== (stage.swap_finalised?.completed ?? null) ||
+        stageDb.outbound_signed_completed !== (stage.outbound_signed?.completed ?? null)
     );
 }

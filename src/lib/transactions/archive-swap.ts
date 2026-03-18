@@ -58,6 +58,7 @@ export async function archiveSwap(swapHash: string): Promise<ArchiveSwapResult> 
                 stages.outbound_delay?.remaining_delay_blocks ?? null,
             outbound_delay_remaining_delay_seconds:
                 stages.outbound_delay?.remaining_delay_seconds ?? null,
+            outbound_signed_completed: stages.outbound_signed?.completed ?? null,
         },
         db,
     );

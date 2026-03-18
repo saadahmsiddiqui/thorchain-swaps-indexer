@@ -222,3 +222,5 @@ CREATE TABLE thorchain.pools (
     created_at TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (asset, height)
 );
+
+ALTER TABLE thorchain.transactions_stages ADD COLUMN outbound_signed_completed BOOLEAN DEFAULT NULL;
