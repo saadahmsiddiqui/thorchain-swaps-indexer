@@ -4,12 +4,12 @@ config();
 import { scheduleJob } from 'node-schedule';
 import { Mutex } from 'async-mutex';
 
-import storedIndexedHash from '@/lib/state-machine/stored-indexed-hash';
-import archiveSuccessful from '@/lib/state-machine/archive-successful';
-import reIndexData from '@/lib/state-machine/reindex-data';
+import storedIndexedHash from '@/lib/thorchain/state-machine/stored-indexed-hash';
+import archiveSuccessful from '@/lib/thorchain/state-machine/archive-successful';
+import reIndexData from '@/lib/thorchain/state-machine/reindex-data';
 
 import { IndexedHashState } from './lib/types';
-import { ArchiveSwapResult } from './lib/transactions/archive-swap';
+import { ArchiveSwapResult } from './lib/types';
 
 async function transition(lock: Mutex, state: IndexedHashState): Promise<void> {
     if (lock.isLocked()) return;
