@@ -33,7 +33,7 @@ export async function getPoolsAtHeight(height?: number): Promise<Array<Pool>> {
     }
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: AbortSignal.timeout(25_000) });
         const data = (await response.json()) as Array<Pool>;
         return data;
     } catch (error) {

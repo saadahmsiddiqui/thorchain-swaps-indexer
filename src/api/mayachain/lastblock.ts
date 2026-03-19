@@ -12,7 +12,7 @@ export interface LastBlock {
 export async function get(): Promise<LastBlocks> {
     const baseUrl = MAYACHAIN_NODE_URL;
     const url = `${baseUrl}/mayachain/lastblock`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(25_000) });
     const json = await response.json();
     return json as LastBlocks;
 }

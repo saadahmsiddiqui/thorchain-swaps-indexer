@@ -51,7 +51,7 @@ export interface StagesError {
 
 export async function get(hash: string): Promise<StagesError | Stages> {
     const url = THORCHAIN_NODE_URL + '/thorchain/tx/stages/' + hash;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(25_000) });
     const json = await response.json();
     return json as StagesError | Stages;
 }

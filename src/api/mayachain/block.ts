@@ -264,7 +264,7 @@ export interface Amount {
 export async function get(height: number): Promise<Root> {
     const url = new URL(`/mayachain/block`, MAYACHAIN_NODE_URL);
     url.searchParams.set('height', height.toString());
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), { signal: AbortSignal.timeout(25_000) });
     const json = await response.json();
     return json as Root;
 }
