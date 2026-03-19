@@ -7,19 +7,11 @@ import {
     storeIndexedHeight,
     updateIndexedHeight,
 } from './lib/indexer/repository';
-import { EndBlockEvent, get as getBlock, Root, Tx } from './api/thorchain/block';
 import { scheduleJob } from 'node-schedule';
-import { isRefundEvent, isSwapEvent } from './lib/end-block-events/utils';
-import { buildRefundEvent } from './lib/refund-events/refund-event';
-import { store } from './lib/transactions/indexed-hashes/repository';
-import { store as storeRefundEvent } from './lib/refund-events/repository';
-import { store as storeSwapEvent } from './lib/swap-events/repository';
-import { store as storePool } from './lib/pools/repository';
 import { getLastBlockSafe } from './lib/utils';
-import { isSwapMemo } from './lib/memo';
-import { buildSwapEvent } from './lib/swap-events/swap-event';
 import { Mutex } from 'async-mutex';
-import { getPoolsAtHeight } from './api/thorchain/pools';
+import { indexHeight as indexHeightThorchain } from '@/lib/thorchain/catch-up';
+import { indexHeight as indexHeightMayachain } from '@/lib/mayachain/catch-up';
 
 const logger = createLogger({
     format: winston.format.json(),
@@ -27,125 +19,14 @@ const logger = createLogger({
     transports: [new winston.transports.Console()],
 });
 
-async function processTxs(height: number, time: string, txs: Tx[]): Promise<void> {
-    logger.info(`process-txs num txs: ` + txs.length);
+const locks = {
+    thorchain: new Mutex(),
+    mayachain: new Mutex(),
+};
 
-    for (const transaction of txs) {
-        const hasMemoInBody =
-            transaction.tx.body && transaction.tx.body.memo && transaction.tx.body.memo.length;
-        const hasMemoInFirstMessage =
-            transaction.tx.body &&
-            transaction.tx.body.messages &&
-            transaction.tx.body.messages[0] &&
-            transaction.tx.body.messages[0].memo &&
-            transaction.tx.body.messages[0].memo.length;
+async function catchUp(protocol: 'thorchain' | 'mayachain'): Promise<void> {
+    const lock = locks[protocol];
 
-        const memo = hasMemoInBody
-            ? transaction.tx.body!.memo
-            : hasMemoInFirstMessage
-              ? transaction.tx.body!.messages[0].memo
-              : null;
-
-        const indexedHash = {
-            protocol: 'thorchain',
-            state: 'STORED_INDEXED_HASH',
-            hash: transaction.hash,
-            height: height.toString(),
-        };
-
-        try {
-            const isSwap = isSwapMemo(memo);
-            if (isSwap) {
-                await store(indexedHash, time);
-            }
-        } catch (error: any) {
-            const message = error.message;
-            logger.error(`process-txs error: ` + message);
-        }
-    }
-}
-
-async function processEndBlockEvents(
-    time: string,
-    height: number,
-    events: EndBlockEvent[],
-): Promise<void> {
-    logger.info(`process-end-block-events num events: ` + events.length);
-
-    for (const event of events) {
-        try {
-            if (isRefundEvent(event)) {
-                const block = {
-                    height,
-                };
-
-                const refundEvent = buildRefundEvent(block, event);
-                await storeRefundEvent(refundEvent);
-            } else if (isSwapEvent(event)) {
-                const swapEvent = buildSwapEvent(height.toString(), event);
-                await storeSwapEvent(swapEvent);
-                await store(
-                    {
-                        protocol: 'thorchain',
-                        state: 'STORED_INDEXED_HASH',
-                        hash: swapEvent.id,
-                        height: height.toString(),
-                    },
-                    time,
-                );
-            }
-        } catch (error: any) {
-            const message = error.message;
-            logger.error(`process-end-block-events error: ` + message);
-        }
-    }
-}
-
-async function processPools(height: number): Promise<void> {
-    try {
-        const poolsAtHeight = await getPoolsAtHeight(height);
-
-        for (const pool of poolsAtHeight) {
-            await storePool({ height, pool });
-        }
-    } catch (error: any) {
-        const message = error.message;
-        logger.error(`process-pools error: ` + message);
-        console.error(error);
-    }
-}
-
-async function indexHeight(height: number): Promise<{ successful: boolean; halt: boolean }> {
-    logger.info('index-height processing block: ' + height);
-    // eslint-disable-next-line no-useless-assignment
-    let block: Root | null = null;
-
-    try {
-        block = await getBlock(height);
-        if ('code' in block && 'message' in block) {
-            const message = block.message as string;
-            throw new Error(message);
-        }
-    } catch {
-        return { successful: false, halt: true };
-    }
-
-    if (block.txs && Array.isArray(block.txs)) {
-        await processTxs(height, block.header.time, block.txs);
-    }
-
-    if (block.end_block_events && Array.isArray(block.end_block_events)) {
-        await processEndBlockEvents(block.header.time, height, block.end_block_events);
-    }
-
-    await processPools(height);
-
-    return { successful: true, halt: false };
-}
-
-const lock = new Mutex();
-
-scheduleJob('catch-up', '*/1 * * * *', async () => {
     if (lock.isLocked()) {
         logger.info('catch-up job already running... job terminated');
         return;
@@ -153,17 +34,17 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
 
     await lock.acquire();
     logger.info('catch-up job started');
-    const currentHeight = await getLastBlockSafe();
+    const currentHeight = await getLastBlockSafe(protocol);
     if (currentHeight === null) return;
     logger.info('catch-up current height: ' + currentHeight);
 
-    let indexedHeight = await getIndexedHeight({ protocol: 'thorchain' });
+    let indexedHeight = await getIndexedHeight({ protocol }, protocol);
     if (!indexedHeight) {
         logger.info(`catch-up storing height to start from ` + currentHeight);
-        await storeIndexedHeight({ height: currentHeight, protocol: 'thorchain' });
+        await storeIndexedHeight({ height: currentHeight, protocol }, protocol);
     }
 
-    indexedHeight = await getIndexedHeight({ protocol: 'thorchain' });
+    indexedHeight = await getIndexedHeight({ protocol }, protocol);
 
     if (!indexedHeight) {
         logger.info(`catch-up height not found ` + currentHeight);
@@ -171,7 +52,7 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
         return;
     }
 
-    logger.info('catch-up indexed height: ' + indexedHeight);
+    logger.info('catch-up indexed height: ' + indexedHeight.height);
     const heightNum = Number(indexedHeight.height);
 
     if (heightNum >= currentHeight) {
@@ -183,13 +64,33 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     for (let index = 1; index < difference; index++) {
         const height = index + heightNum;
         logger.info('catch-up processing height: ' + height);
-        const state = await indexHeight(height);
-        if (state.halt) {
-            lock.release();
-            return;
+
+        if (protocol === 'thorchain') {
+            const state = await indexHeightThorchain(height);
+            if (state.halt) {
+                lock.release();
+                return;
+            }
+            await updateIndexedHeight({ protocol, height: height }, protocol);
+        } else if (protocol === 'mayachain') {
+            const state = await indexHeightMayachain(height);
+            if (state.halt) {
+                lock.release();
+                return;
+            }
+            await updateIndexedHeight({ protocol, height: height }, protocol);
         }
-        await updateIndexedHeight({ protocol: 'thorchain', height: height });
     }
 
     lock.release();
+}
+
+scheduleJob('catch-up', '*/1 * * * *', async () => {
+    const protocol: 'thorchain' | 'mayachain' = 'mayachain';
+    await catchUp(protocol);
+});
+
+scheduleJob('catch-up', '*/1 * * * *', async () => {
+    const protocol: 'thorchain' | 'mayachain' = 'thorchain';
+    await catchUp(protocol);
 });

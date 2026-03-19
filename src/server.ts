@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { get } from '@/lib/transactions/fetch';
+import { get } from '@/lib/thorchain/transactions/fetch';
 import { config } from 'dotenv';
 
 config();
