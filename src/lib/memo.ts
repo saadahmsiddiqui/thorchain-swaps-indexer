@@ -1,3 +1,8 @@
+import {
+    ParsedSwapMemo,
+    ParsedSwapMemoAffiliate,
+} from './thorchain/parsed-swap-memos/parsed-swap-memos';
+
 export function isSwapMemo(memo: string | undefined | null): boolean {
     if (!memo) return false;
     const lowercased = memo.toLowerCase();
@@ -6,18 +11,13 @@ export function isSwapMemo(memo: string | undefined | null): boolean {
     );
 }
 
-type ParsedSwapMemo = {
-    limit: number | null;
-    interval: number | null;
-    quantity: number | null;
-    affiliates: Array<{ affiliate: string; fee: number }>;
-    destinationAddress: string;
-    refundAddress: string | null;
-    asset: string;
-    assetRaw: string;
-};
-
-export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
+export function parseSwapMemo(
+    hash: string,
+    memo: string,
+): {
+    parsed: Omit<ParsedSwapMemo, 'created_at'>;
+    affiliates: Array<Omit<ParsedSwapMemoAffiliate, 'created_at'>>;
+} | null {
     const params = memo.split(':');
     const [handler, asset, destinationAddress, ...rest] = params;
     console.log('[cosmos/memo] MEMO handler: ', handler);
@@ -25,14 +25,14 @@ export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
     const isSwap = isSwapMemo(memo);
     if (!isSwap) return null;
 
-    const parsedMemo: ParsedSwapMemo = {
+    const affiliates: Array<Omit<ParsedSwapMemoAffiliate, 'created_at'>> = [];
+    const parsedMemo: Omit<ParsedSwapMemo, 'created_at'> = {
+        hash,
         limit: null,
         interval: null,
         quantity: null,
-        affiliates: [],
-        destinationAddress: destinationAddress,
-        refundAddress: null,
-        assetRaw: asset,
+        destination_address: destinationAddress,
+        refund_address: null,
         asset: parseAssetShortcode(asset, 'thorchain'),
     };
 
@@ -40,8 +40,8 @@ export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
     const destAddrHasRefundAddr = destSplit.length > 1;
 
     if (destAddrHasRefundAddr) {
-        parsedMemo.destinationAddress = destSplit[0];
-        parsedMemo.refundAddress = destSplit[1];
+        parsedMemo.destination_address = destSplit[0];
+        parsedMemo.refund_address = destSplit[1];
     }
 
     const hasLimIntQuan = rest[0] !== undefined;
@@ -53,12 +53,13 @@ export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
     }
 
     const hasAffiliates = rest[1] !== undefined;
-    const affiliates = hasAffiliates ? rest[1].split('/') : [];
+    const memoAffiliates = hasAffiliates ? rest[1].split('/') : [];
     if (affiliates.length > 0) {
-        for (const affiliate of affiliates) {
-            parsedMemo.affiliates.push({
+        for (const affiliate of memoAffiliates) {
+            affiliates.push({
                 affiliate,
-                fee: 0,
+                hash,
+                fee_basis_points: 0,
             });
         }
     }
@@ -68,21 +69,21 @@ export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
     if (affiliateFee.length > 0) {
         const hasOneFeeForAll = affiliateFee.length === 1;
         if (hasOneFeeForAll) {
-            const fee = Number(affiliateFee[0]) / 10000;
-            for (const affiliate of parsedMemo.affiliates) {
-                affiliate.fee = fee;
+            const fee = Number(affiliateFee[0]);
+            for (const affiliate of affiliates) {
+                affiliate.fee_basis_points = fee;
             }
         } else {
             let idx = 0;
             for (const fee of affiliateFee) {
-                const feeNum = Number(fee) / 10000;
-                parsedMemo.affiliates[idx].fee = feeNum;
+                const feeNum = Number(fee);
+                affiliates[idx].fee_basis_points = feeNum;
                 idx = idx + 1;
             }
         }
     }
 
-    return parsedMemo;
+    return { parsed: parsedMemo, affiliates };
 }
 
 // -------------------------------------------------

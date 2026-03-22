@@ -9,15 +9,30 @@ import { store as storeIndexedHash } from './transactions/indexed-hashes/reposit
 import { store as storeRefundEvent } from './refund-events/repository';
 import { store as storeSwapEvent } from './swap-events/repository';
 import { store as storePool } from './pools/repository';
-import { isSwapMemo } from '../memo';
+import { isSwapMemo, parseSwapMemo } from '../memo';
 import { buildSwapEvent } from './swap-events/swap-event';
 import { getPoolsAtHeight } from '../../api/thorchain/pools';
+import { storeParsedMemoAffiliates, storeParsedSwapMemo } from './parsed-swap-memos/repository';
+import { getClient } from '@/database';
 
 const logger = createLogger({
     format: winston.format.json(),
     defaultMeta: { service: 'indexer-catch-up-thorchain' },
     transports: [new winston.transports.Console()],
 });
+
+async function processSwapMemo(hash: string, memo: string): Promise<void> {
+    try {
+        const parsedMemo = parseSwapMemo(hash, memo);
+        const db = getClient('rw');
+        if (parsedMemo) {
+            await storeParsedSwapMemo(db, parsedMemo.parsed);
+            await storeParsedMemoAffiliates(db, parsedMemo.affiliates);
+        }
+    } catch (error: any) {
+        logger.error('process-swap-memo error: ' + error.message);
+    }
+}
 
 async function processTxs(height: number, time: string, txs: Tx[]): Promise<void> {
     logger.info(`process-txs num txs: ` + txs.length);
@@ -49,6 +64,9 @@ async function processTxs(height: number, time: string, txs: Tx[]): Promise<void
             const isSwap = isSwapMemo(memo);
             if (isSwap) {
                 await storeIndexedHash(indexedHash, time);
+                // * Store information about affiliate transactions
+                // * for calculating stats using a cron Job
+                await processSwapMemo(indexedHash.hash, memo as string);
             }
         } catch (error: any) {
             const message = error.message;

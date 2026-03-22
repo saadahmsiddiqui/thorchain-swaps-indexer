@@ -35,9 +35,12 @@ async function catchUp(protocol: 'thorchain' | 'mayachain'): Promise<void> {
     await lock.acquire();
     logger.info('catch-up job started');
     const currentHeight = await getLastBlockSafe(protocol);
-    if (currentHeight === null) return;
-    logger.info('catch-up current height: ' + currentHeight);
+    if (currentHeight === null) {
+        lock.release();
+        return;
+    }
 
+    logger.info('catch-up current height: ' + currentHeight);
     let indexedHeight = await getIndexedHeight({ protocol }, protocol);
     if (!indexedHeight) {
         logger.info(`catch-up storing height to start from ` + currentHeight);
