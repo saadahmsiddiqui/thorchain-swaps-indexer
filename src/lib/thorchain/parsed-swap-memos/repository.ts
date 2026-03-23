@@ -9,13 +9,13 @@ export async function storeParsedSwapMemo(
     const params = [
         memo.hash,
         memo.asset,
-        memo.limit,
-        memo.interval,
-        memo.quantity,
+        memo.swap_limit,
+        memo.swap_interval,
+        memo.swap_quantity,
         memo.destination_address,
         memo.refund_address,
     ];
-    const query = `INSERT INTO ${schema}.parsed_swap_memos (hash, asset, limit, interval, quantity, destination_address, refund_address) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`;
+    const query = `INSERT INTO ${schema}.parsed_swap_memos (hash, asset, swap_limit, swap_interval, swap_quantity, destination_address, refund_address) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`;
     const response = await db.query<ParsedSwapMemo>(query, params);
     return response.rows[0] ? response.rows[0] : null;
 }

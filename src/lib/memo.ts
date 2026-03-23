@@ -20,7 +20,7 @@ export function parseSwapMemo(
 } | null {
     const params = memo.split(':');
     const [handler, asset, destinationAddress, ...rest] = params;
-    console.log('[cosmos/memo] MEMO handler: ', handler);
+    console.log('[cosmos/memo] MEMO handler: ', hash, handler);
 
     const isSwap = isSwapMemo(memo);
     if (!isSwap) return null;
@@ -28,9 +28,9 @@ export function parseSwapMemo(
     const affiliates: Array<Omit<ParsedSwapMemoAffiliate, 'created_at'>> = [];
     const parsedMemo: Omit<ParsedSwapMemo, 'created_at'> = {
         hash,
-        limit: null,
-        interval: null,
-        quantity: null,
+        swap_limit: null,
+        swap_interval: null,
+        swap_quantity: null,
         destination_address: destinationAddress,
         refund_address: null,
         asset: parseAssetShortcode(asset, 'thorchain'),
@@ -47,9 +47,9 @@ export function parseSwapMemo(
     const hasLimIntQuan = rest[0] !== undefined;
     const values = hasLimIntQuan ? rest[0].split('/') : [];
     if (values.length > 0) {
-        parsedMemo.limit = Number(values[0]);
-        parsedMemo.interval = Number(values[1]);
-        parsedMemo.quantity = Number(values[2]);
+        parsedMemo.swap_limit = Number(values[0]);
+        parsedMemo.swap_interval = Number(values[1]);
+        parsedMemo.swap_quantity = Number(values[2]);
     }
 
     const hasAffiliates = rest[1] !== undefined;
