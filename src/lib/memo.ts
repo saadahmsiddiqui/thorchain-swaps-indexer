@@ -12,6 +12,7 @@ export function isSwapMemo(memo: string | undefined | null): boolean {
 }
 
 export function parseSwapMemo(
+    protocol: 'thorchain' | 'mayachain',
     hash: string,
     memo: string,
 ): {
@@ -33,7 +34,7 @@ export function parseSwapMemo(
         swap_quantity: null,
         destination_address: destinationAddress,
         refund_address: null,
-        asset: parseAssetShortcode(asset, 'thorchain'),
+        asset: parseAssetShortcode(asset, protocol),
     };
 
     const destSplit = destinationAddress.split('/');
@@ -90,7 +91,10 @@ export function parseSwapMemo(
 // See the TC and Maya repos:
 // https://gitlab.com/thorchain/thornode/-/blob/develop/common/asset.go
 // https://gitlab.com/mayachain/mayanode/-/blob/develop/common/asset.go
-export function parseAssetShortcode(rawAsset: string, protocol?: 'thorchain' | 'maya'): string {
+export function parseAssetShortcode(
+    rawAsset: string,
+    protocol?: 'thorchain' | 'mayachain',
+): string {
     switch (rawAsset.toLowerCase()) {
         case 'x':
         case 'xx':

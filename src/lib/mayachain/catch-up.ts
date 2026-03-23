@@ -23,7 +23,7 @@ const logger = createLogger({
 
 async function processSwapMemo(hash: string, memo: string): Promise<void> {
     try {
-        const parsedMemo = parseSwapMemo(hash, memo);
+        const parsedMemo = parseSwapMemo('mayachain', hash, memo);
         const db = getClient('rw');
         if (parsedMemo) {
             await storeParsedSwapMemo(db, parsedMemo.parsed);
