@@ -47,14 +47,14 @@ export function parseSwapMemo(
     const hasLimIntQuan = rest[0] !== undefined;
     const values = hasLimIntQuan ? rest[0].split('/') : [];
     if (values.length > 0) {
-        parsedMemo.swap_limit = Number(values[0]);
-        parsedMemo.swap_interval = Number(values[1]);
-        parsedMemo.swap_quantity = Number(values[2]);
+        parsedMemo.swap_limit = Number(values[0] ?? 0);
+        parsedMemo.swap_interval = Number(values[1] ?? 0);
+        parsedMemo.swap_quantity = Number(values[2] ?? 0);
     }
 
     const hasAffiliates = rest[1] !== undefined;
     const memoAffiliates = hasAffiliates ? rest[1].split('/') : [];
-    if (affiliates.length > 0) {
+    if (memoAffiliates.length > 0) {
         for (const affiliate of memoAffiliates) {
             affiliates.push({
                 affiliate,
