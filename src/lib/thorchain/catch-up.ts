@@ -103,6 +103,9 @@ async function processEndBlockEvents(
                     },
                     time,
                 );
+                if (event.memo && isSwapMemo(event.memo)) {
+                    await processSwapMemo(event.id!, event.memo);
+                }
             }
         } catch (error: any) {
             const message = error.message;
