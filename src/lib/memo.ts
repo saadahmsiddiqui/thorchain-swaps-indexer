@@ -1,3 +1,8 @@
+import {
+    ParsedSwapMemo,
+    ParsedSwapMemoAffiliate,
+} from './thorchain/parsed-swap-memos/parsed-swap-memos';
+
 export function isSwapMemo(memo: string | undefined | null): boolean {
     if (!memo) return false;
     const lowercased = memo.toLowerCase();
@@ -6,59 +11,56 @@ export function isSwapMemo(memo: string | undefined | null): boolean {
     );
 }
 
-type ParsedSwapMemo = {
-    limit: number | null;
-    interval: number | null;
-    quantity: number | null;
-    affiliates: Array<{ affiliate: string; fee: number }>;
-    destinationAddress: string;
-    refundAddress: string | null;
-    asset: string;
-    assetRaw: string;
-};
-
-export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
+export function parseSwapMemo(
+    protocol: 'thorchain' | 'mayachain',
+    hash: string,
+    memo: string,
+): {
+    parsed: Omit<ParsedSwapMemo, 'created_at'>;
+    affiliates: Array<Omit<ParsedSwapMemoAffiliate, 'created_at'>>;
+} | null {
     const params = memo.split(':');
     const [handler, asset, destinationAddress, ...rest] = params;
-    console.log('[cosmos/memo] MEMO handler: ', handler);
+    console.log('[cosmos/memo] MEMO handler: ', hash, handler);
 
     const isSwap = isSwapMemo(memo);
     if (!isSwap) return null;
 
-    const parsedMemo: ParsedSwapMemo = {
-        limit: null,
-        interval: null,
-        quantity: null,
-        affiliates: [],
-        destinationAddress: destinationAddress,
-        refundAddress: null,
-        assetRaw: asset,
-        asset: parseAssetShortcode(asset, 'thorchain'),
+    const affiliates: Array<Omit<ParsedSwapMemoAffiliate, 'created_at'>> = [];
+    const parsedMemo: Omit<ParsedSwapMemo, 'created_at'> = {
+        hash,
+        swap_limit: null,
+        swap_interval: null,
+        swap_quantity: null,
+        destination_address: destinationAddress,
+        refund_address: null,
+        asset: parseAssetShortcode(asset, protocol),
     };
 
     const destSplit = destinationAddress.split('/');
     const destAddrHasRefundAddr = destSplit.length > 1;
 
     if (destAddrHasRefundAddr) {
-        parsedMemo.destinationAddress = destSplit[0];
-        parsedMemo.refundAddress = destSplit[1];
+        parsedMemo.destination_address = destSplit[0];
+        parsedMemo.refund_address = destSplit[1];
     }
 
     const hasLimIntQuan = rest[0] !== undefined;
     const values = hasLimIntQuan ? rest[0].split('/') : [];
     if (values.length > 0) {
-        parsedMemo.limit = Number(values[0]);
-        parsedMemo.interval = Number(values[1]);
-        parsedMemo.quantity = Number(values[2]);
+        parsedMemo.swap_limit = Number(values[0] ?? 0);
+        parsedMemo.swap_interval = Number(values[1] ?? 0);
+        parsedMemo.swap_quantity = Number(values[2] ?? 0);
     }
 
     const hasAffiliates = rest[1] !== undefined;
-    const affiliates = hasAffiliates ? rest[1].split('/') : [];
-    if (affiliates.length > 0) {
-        for (const affiliate of affiliates) {
-            parsedMemo.affiliates.push({
+    const memoAffiliates = hasAffiliates ? rest[1].split('/') : [];
+    if (memoAffiliates.length > 0) {
+        for (const affiliate of memoAffiliates) {
+            affiliates.push({
                 affiliate,
-                fee: 0,
+                hash,
+                fee_basis_points: 0,
             });
         }
     }
@@ -68,28 +70,31 @@ export function parseSwapMemo(memo: string): ParsedSwapMemo | null {
     if (affiliateFee.length > 0) {
         const hasOneFeeForAll = affiliateFee.length === 1;
         if (hasOneFeeForAll) {
-            const fee = Number(affiliateFee[0]) / 10000;
-            for (const affiliate of parsedMemo.affiliates) {
-                affiliate.fee = fee;
+            const fee = Number(affiliateFee[0]);
+            for (const affiliate of affiliates) {
+                affiliate.fee_basis_points = fee;
             }
         } else {
             let idx = 0;
             for (const fee of affiliateFee) {
-                const feeNum = Number(fee) / 10000;
-                parsedMemo.affiliates[idx].fee = feeNum;
+                const feeNum = Number(fee);
+                affiliates[idx].fee_basis_points = feeNum;
                 idx = idx + 1;
             }
         }
     }
 
-    return parsedMemo;
+    return { parsed: parsedMemo, affiliates };
 }
 
 // -------------------------------------------------
 // See the TC and Maya repos:
 // https://gitlab.com/thorchain/thornode/-/blob/develop/common/asset.go
 // https://gitlab.com/mayachain/mayanode/-/blob/develop/common/asset.go
-export function parseAssetShortcode(rawAsset: string, protocol?: 'thorchain' | 'maya'): string {
+export function parseAssetShortcode(
+    rawAsset: string,
+    protocol?: 'thorchain' | 'mayachain',
+): string {
     switch (rawAsset.toLowerCase()) {
         case 'x':
         case 'xx':

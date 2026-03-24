@@ -224,3 +224,22 @@ CREATE TABLE thorchain.pools (
 );
 
 ALTER TABLE thorchain.transactions_stages ADD COLUMN outbound_signed_completed BOOLEAN DEFAULT NULL;
+
+CREATE TABLE thorchain.parsed_swap_memos(
+    hash VARCHAR PRIMARY KEY,
+    asset VARCHAR NOT NULL,
+    swap_limit NUMERIC(50, 0),
+    swap_interval INTEGER,
+    swap_quantity INTEGER,
+    destination_address VARCHAR NOT NULL,
+    refund_address VARCHAR,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE thorchain.parsed_swap_memos_affiliates(
+    hash VARCHAR,
+    affiliate VARCHAR NOT NULL,
+    fee_basis_points INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (hash, affiliate)
+);
