@@ -70,14 +70,27 @@ export function parseSwapMemo(
     if (affiliateFee.length > 0) {
         const hasOneFeeForAll = affiliateFee.length === 1;
         if (hasOneFeeForAll) {
-            const fee = Number(affiliateFee[0]);
-            for (const affiliate of affiliates) {
-                affiliate.fee_basis_points = fee;
+            if (affiliateFee[0].includes('|')) {
+                const fee = Number(affiliateFee[0].split('|')[0]);
+                for (const affiliate of affiliates) {
+                    affiliate.fee_basis_points = fee;
+                }
+            } else {
+                const fee = Number(affiliateFee[0]);
+                for (const affiliate of affiliates) {
+                    affiliate.fee_basis_points = fee;
+                }
             }
         } else {
             let idx = 0;
             for (const fee of affiliateFee) {
-                const feeNum = Number(fee);
+                let feeNum;
+                if (fee.includes('|')) {
+                    feeNum = Number(fee.split('|')[0]);
+                } else {
+                    feeNum = Number(fee);
+                }
+
                 affiliates[idx].fee_basis_points = feeNum;
                 idx = idx + 1;
             }

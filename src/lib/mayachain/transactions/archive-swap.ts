@@ -1,5 +1,5 @@
 import { getClient } from '@/database';
-import { TxDetails, get as getTxDetails } from '@/api/mayachain/tx-details';
+import { TxDetails, get as getTxDetails, Tx } from '@/api/mayachain/tx-details';
 import { Stages, get as getTxStages } from '@/api/mayachain/tx-stages';
 
 import { storeTransactionCoins } from './tx-coins/repository';
@@ -12,8 +12,41 @@ import { storeTransactionAction } from './tx-actions/repository';
 import { storeTransactionStage } from './tx-stages/repostiory';
 import { storeInnerTransaction } from './inner-txs/repository';
 import { storeTransactionBaseInfo } from './tx-base-info/repository';
-import { isSwapMemo } from '@/lib/memo';
+import { isSwapMemo, parseSwapMemo } from '@/lib/memo';
 import { ArchiveSwapResult } from '@/lib/types';
+import { getSwapQuote } from '@/api/mayachain/swap-quote';
+import { storeSwapQuote } from '../swap-quote/repository';
+
+async function processSwapQuote(hash: string, height: number, tx: Tx): Promise<void> {
+    try {
+        const isSwap = isSwapMemo(tx.tx.memo);
+        if (isSwap && tx.tx.memo) {
+            const memoData = parseSwapMemo('mayachain', hash, tx.tx.memo);
+            if (memoData) {
+                const affiliates = memoData.affiliates.map((i) => i.affiliate).join('/');
+                const affiliateBpss = memoData.affiliates
+                    .map((i) => i.fee_basis_points.toString())
+                    .join('/');
+
+                const swapQuote = await getSwapQuote({
+                    height: height.toString(),
+                    from_asset: tx.tx.coins[0].asset,
+                    to_asset: memoData.parsed.asset,
+                    amount: tx.tx.coins[0].amount,
+                    destination: memoData.parsed.destination_address,
+                    affiliate: affiliates,
+                    affiliate_bps: affiliateBpss,
+                });
+
+                if (swapQuote && 'fees' in swapQuote) {
+                    await storeSwapQuote(hash, swapQuote);
+                }
+            }
+        }
+    } catch (error: any) {
+        console.error('process-swap-quote error: ' + error.message);
+    }
+}
 
 export async function archiveSwap(swapHash: string): Promise<ArchiveSwapResult> {
     const db = getClient('rw');
@@ -188,6 +221,8 @@ export async function archiveSwap(swapHash: string): Promise<ArchiveSwapResult> 
                     }
                 }
             }
+
+            await processSwapQuote(swapHash, detail.consensus_height, detail.txs[0]);
         }
 
         return ArchiveSwapResult.ArchiveSuccessful;
