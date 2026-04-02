@@ -243,7 +243,7 @@ CREATE TABLE mayachain.swap_quotes(
     fees_slippage_bps INTEGER NOT NULL,
     fees_total_bps INTEGER NOT NULL,
     expiry BIGINT NOT NULL,
-    dust_threshold NUMERIC(50, 0) NOT NULL,
+    dust_threshold NUMERIC(50, 0),
     recommended_min_amount_in NUMERIC(50, 0) NOT NULL,
     recommended_gas_rate NUMERIC(50, 0) NOT NULL,
     gas_rate_units VARCHAR NOT NULL,

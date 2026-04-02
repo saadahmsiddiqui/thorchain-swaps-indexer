@@ -10,7 +10,7 @@ export interface SwapQuote {
     fees_slippage_bps: number;
     fees_total_bps: number;
     expiry: string;
-    dust_threshold: string;
+    dust_threshold: string | null;
     recommended_min_amount_in: string;
     recommended_gas_rate: string;
     gas_rate_units: string;
