@@ -15,7 +15,7 @@ export interface SwapQuote {
     expiry: number;
     warning: string;
     notes: string;
-    dust_threshold: string;
+    dust_threshold: string | null;
     recommended_min_amount_in: string;
     recommended_gas_rate: string;
     gas_rate_units: string;
