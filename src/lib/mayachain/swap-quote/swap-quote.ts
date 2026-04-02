@@ -17,4 +17,5 @@ export interface SwapQuote {
     expected_amount_out: string;
     max_streaming_quantity: number;
     streaming_swap_blocks: number;
+    created_at: string;
 }
