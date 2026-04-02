@@ -249,5 +249,6 @@ CREATE TABLE mayachain.swap_quotes(
     gas_rate_units VARCHAR NOT NULL,
     expected_amount_out NUMERIC(50, 0) NOT NULL,
     max_streaming_quantity INTEGER NOT NULL,
-    streaming_swap_blocks INTEGER NOT NULL
+    streaming_swap_blocks INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
