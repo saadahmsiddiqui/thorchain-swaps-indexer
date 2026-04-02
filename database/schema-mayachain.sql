@@ -230,3 +230,24 @@ CREATE TABLE mayachain.parsed_swap_memos_affiliates(
     created_at TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (hash, affiliate)
 );
+
+CREATE TABLE mayachain.swap_quotes(
+    hash VARCHAR PRIMARY KEY,
+    outbound_delay_blocks INTEGER NOT NULL DEFAULT 0,
+    outbound_delay_seconds INTEGER NOT NULL DEFAULT 0,
+    fees_asset VARCHAR NOT NULL,
+    fees_affiliate NUMERIC(50, 0) NOT NULL,
+    fees_outbound NUMERIC(50, 0) NOT NULL,
+    fees_liquidity NUMERIC(50, 0) NOT NULL,
+    fees_total NUMERIC(50, 0) NOT NULL,
+    fees_slippage_bps INTEGER NOT NULL,
+    fees_total_bps INTEGER NOT NULL,
+    expiry BIGINT NOT NULL,
+    dust_threshold NUMERIC(50, 0) NOT NULL,
+    recommended_min_amount_in NUMERIC(50, 0) NOT NULL,
+    recommended_gas_rate NUMERIC(50, 0) NOT NULL,
+    gas_rate_units VARCHAR NOT NULL,
+    expected_amount_out NUMERIC(50, 0) NOT NULL,
+    max_streaming_quantity INTEGER NOT NULL,
+    streaming_swap_blocks INTEGER NOT NULL
+);
