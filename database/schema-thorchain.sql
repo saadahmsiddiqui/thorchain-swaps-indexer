@@ -223,6 +223,8 @@ CREATE TABLE thorchain.pools (
     PRIMARY KEY (asset, height)
 );
 
+CREATE INDEX idx_pools_height ON thorchain.pools(height);
+
 ALTER TABLE thorchain.transactions_stages ADD COLUMN outbound_signed_completed BOOLEAN DEFAULT NULL;
 
 CREATE TABLE thorchain.parsed_swap_memos(
