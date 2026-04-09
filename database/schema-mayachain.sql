@@ -210,6 +210,8 @@ CREATE TABLE mayachain.pools (
     PRIMARY KEY (asset, height)
 );
 
+CREATE INDEX idx_mayachain_pools_height ON mayachain.pools(height);
+
 ALTER TABLE mayachain.transactions_stages ADD COLUMN outbound_signed_completed BOOLEAN DEFAULT NULL;
 
 CREATE TABLE mayachain.parsed_swap_memos(
