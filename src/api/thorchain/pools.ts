@@ -1,4 +1,4 @@
-import { THORCHAIN_NODE_URL } from '@/config/constants';
+import { THOR_POOLS_BASE_URL } from '@/config/constants';
 
 export type Pool = {
     asset: string;
@@ -27,7 +27,7 @@ export type Pool = {
 };
 
 export async function getPoolsAtHeight(height?: number): Promise<Array<Pool>> {
-    const url = new URL('thorchain/pools', THORCHAIN_NODE_URL);
+    const url = new URL('thorchain/pools', THOR_POOLS_BASE_URL);
     if (height) {
         url.searchParams.set('height', height.toString());
     }

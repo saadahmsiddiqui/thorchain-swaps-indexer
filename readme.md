@@ -35,3 +35,15 @@ Steps:
   - stages updated ? --> `REINDEX_DATA`
   - swaps complete and not swap pending ? `COMPLETE`
 - `ARCHIVE_FAILED` | `ERROR_STAGES` | `ERROR_DETAILS` | `SKIPPED` --> not implemented at the moment
+
+## Setup Local DB
+
+```sh
+docker run -d \
+  --name postgres-xscanner \
+  -e POSTGRES_PASSWORD=xscanner \
+  -e POSTGRES_USER=xscanner \
+  -e POSTGRES_DB=xscanner \
+  -p 5432:5432 \
+  postgres
+```
