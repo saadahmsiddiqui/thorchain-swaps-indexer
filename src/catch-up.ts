@@ -12,6 +12,9 @@ import { getLastBlockSafe } from './lib/utils';
 import { Mutex } from 'async-mutex';
 import { indexHeight as indexHeightThorchain } from '@/lib/thorchain/catch-up';
 import { indexHeight as indexHeightMayachain } from '@/lib/mayachain/catch-up';
+import { onStartup } from './lib/indexer/indexer-runs';
+
+let processId;
 
 const logger = createLogger({
     format: winston.format.json(),
@@ -97,3 +100,11 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     const protocol: 'thorchain' | 'mayachain' = 'thorchain';
     await catchUp(protocol);
 });
+
+async function start() {
+    const record = await onStartup('catch-up');
+    processId = record.id
+    return `Process ID: ${record.id.toString()}`
+}
+
+start().then(console.log).catch(console.error);
