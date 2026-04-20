@@ -102,7 +102,7 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     try {
         await catchUp(protocol);
     } catch (error: any) {
-        const msg = `${processId} ${protocol}` + 'catch-up failure: ' + error.message
+        const msg = `${processId} ${protocol}` + ' catch-up failure: ' + error.message
         errorLogger.error(msg)
     } finally {
         locks[protocol].release();
@@ -114,7 +114,7 @@ scheduleJob('catch-up', '*/1 * * * *', async () => {
     try {
         await catchUp(protocol);
     } catch (error: any) {
-        const msg = `${processId} ${protocol}` + 'catch-up failure: ' + error.message
+        const msg = `${processId} ${protocol}` + ' catch-up failure: ' + error.message
         errorLogger.error(msg)
     } finally {
         locks[protocol].release();
